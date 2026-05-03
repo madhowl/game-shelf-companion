@@ -6,4 +6,11 @@
 // You can pass additional config via defineConfig({ vite: { ... } }) if needed.
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 
-export default defineConfig();
+// `base: './'` makes built asset URLs relative, which is required when the
+// bundle is loaded over the `file://` protocol inside Electron. It is
+// harmless for the regular web build.
+export default defineConfig({
+  vite: {
+    base: "./",
+  },
+});
