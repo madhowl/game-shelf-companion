@@ -6,7 +6,7 @@ import { db, now, uid, type Game, type ComponentInstance } from "@/lib/db";
 import { Field, KindBadge, inputCls } from "./index";
 import { fileToDataUrl } from "@/lib/utils-format";
 
-export const Route = createFileRoute("/game/")({
+export const Route = createFileRoute("/game/$id")({
   component: GameDetail,
 });
 
