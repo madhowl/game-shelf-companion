@@ -1,6 +1,7 @@
 import { Link, Outlet, useRouterState } from "@tanstack/react-router";
 import { Library, Layers, FileJson, Printer, ScanLine, Dices } from "lucide-react";
 import type { ReactNode } from "react";
+import { ThemeToggle } from "@/components/app/ThemeProvider";
 
 const nav = [
   { to: "/", label: "Library", icon: Library, exact: true },
@@ -51,15 +52,21 @@ export function AppLayout({ children }: { children?: ReactNode }) {
             <NavItem key={n.to} {...n} />
           ))}
         </nav>
-        <div className="p-4 text-[11px] text-muted-foreground border-t border-border">
-          Local-first · Stored in your browser
+        <div className="p-4 border-t border-border flex items-center justify-between gap-2">
+          <div className="text-[11px] text-muted-foreground">
+            Local-first · Stored in your browser
+          </div>
+          <ThemeToggle />
         </div>
       </aside>
       <main className="flex-1 min-w-0">
-        <div className="md:hidden border-b border-border bg-card/80 backdrop-blur p-3 flex gap-2 overflow-x-auto">
-          {nav.map((n) => (
-            <NavItem key={n.to} {...n} />
-          ))}
+        <div className="md:hidden border-b border-border bg-card/80 backdrop-blur p-3 flex items-center gap-2">
+          <div className="flex gap-2 overflow-x-auto flex-1">
+            {nav.map((n) => (
+              <NavItem key={n.to} {...n} />
+            ))}
+          </div>
+          <ThemeToggle />
         </div>
         {children ?? <Outlet />}
       </main>
