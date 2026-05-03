@@ -10,6 +10,8 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TemplatesRouteImport } from './routes/templates'
+import { Route as PrintRouteImport } from './routes/print'
+import { Route as OcrRouteImport } from './routes/ocr'
 import { Route as DataRouteImport } from './routes/data'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as GameRouteImport } from './routes/game.'
@@ -17,6 +19,16 @@ import { Route as GameRouteImport } from './routes/game.'
 const TemplatesRoute = TemplatesRouteImport.update({
   id: '/templates',
   path: '/templates',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrintRoute = PrintRouteImport.update({
+  id: '/print',
+  path: '/print',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OcrRoute = OcrRouteImport.update({
+  id: '/ocr',
+  path: '/ocr',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DataRoute = DataRouteImport.update({
@@ -38,12 +50,16 @@ const GameRoute = GameRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/data': typeof DataRoute
+  '/ocr': typeof OcrRoute
+  '/print': typeof PrintRoute
   '/templates': typeof TemplatesRoute
   '/game/': typeof GameRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/data': typeof DataRoute
+  '/ocr': typeof OcrRoute
+  '/print': typeof PrintRoute
   '/templates': typeof TemplatesRoute
   '/game': typeof GameRoute
 }
@@ -51,20 +67,24 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/data': typeof DataRoute
+  '/ocr': typeof OcrRoute
+  '/print': typeof PrintRoute
   '/templates': typeof TemplatesRoute
   '/game/': typeof GameRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/data' | '/templates' | '/game/'
+  fullPaths: '/' | '/data' | '/ocr' | '/print' | '/templates' | '/game/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/data' | '/templates' | '/game'
-  id: '__root__' | '/' | '/data' | '/templates' | '/game/'
+  to: '/' | '/data' | '/ocr' | '/print' | '/templates' | '/game'
+  id: '__root__' | '/' | '/data' | '/ocr' | '/print' | '/templates' | '/game/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   DataRoute: typeof DataRoute
+  OcrRoute: typeof OcrRoute
+  PrintRoute: typeof PrintRoute
   TemplatesRoute: typeof TemplatesRoute
   GameRoute: typeof GameRoute
 }
@@ -76,6 +96,20 @@ declare module '@tanstack/react-router' {
       path: '/templates'
       fullPath: '/templates'
       preLoaderRoute: typeof TemplatesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/print': {
+      id: '/print'
+      path: '/print'
+      fullPath: '/print'
+      preLoaderRoute: typeof PrintRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ocr': {
+      id: '/ocr'
+      path: '/ocr'
+      fullPath: '/ocr'
+      preLoaderRoute: typeof OcrRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/data': {
@@ -105,6 +139,8 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   DataRoute: DataRoute,
+  OcrRoute: OcrRoute,
+  PrintRoute: PrintRoute,
   TemplatesRoute: TemplatesRoute,
   GameRoute: GameRoute,
 }
