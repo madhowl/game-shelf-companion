@@ -1,4 +1,4 @@
-const { app, BrowserWindow, shell, Menu } = require("electron");
+const { app, BrowserWindow, shell, Menu, ipcMain, dialog } = require("electron");
 const path = require("path");
 const fs = require("fs");
 
@@ -87,6 +87,50 @@ Menu.setApplicationMenu(
 );
 
 app.whenReady().then(createWindow);
+
+// ---------------------------------------------------------------------------
+// IPC: native image picker for OCR
+// ---------------------------------------------------------------------------
+const IMAGE_MIME = {
+  ".png": "image/png",
+  ".jpg": "image/jpeg",
+  ".jpeg": "image/jpeg",
+  ".gif": "image/gif",
+  ".webp": "image/webp",
+  ".bmp": "image/bmp",
+  ".tif": "image/tiff",
+  ".tiff": "image/tiff",
+};
+
+ipcMain.handle("meeple:open-image", async (event, opts = {}) => {
+  const win = BrowserWindow.fromWebContents(event.sender);
+  const result = await dialog.showOpenDialog(win, {
+    title: opts.title || "Select card image for OCR",
+    buttonLabel: opts.buttonLabel || "Use for OCR",
+    properties: ["openFile"],
+    filters: [
+      { name: "Images", extensions: ["png", "jpg", "jpeg", "gif", "webp", "bmp", "tif", "tiff"] },
+      { name: "All files", extensions: ["*"] },
+    ],
+  });
+  if (result.canceled || !result.filePaths[0]) return null;
+  const filePath = result.filePaths[0];
+  try {
+    const buf = await fs.promises.readFile(filePath);
+    const ext = path.extname(filePath).toLowerCase();
+    const mimeType = IMAGE_MIME[ext] || "application/octet-stream";
+    const dataUrl = `data:${mimeType};base64,${buf.toString("base64")}`;
+    return {
+      name: path.basename(filePath),
+      path: filePath,
+      mimeType,
+      dataUrl,
+      size: buf.byteLength,
+    };
+  } catch (err) {
+    return { error: err && err.message ? err.message : String(err) };
+  }
+});
 
 app.on("window-all-closed", () => {
   if (process.platform !== "darwin") app.quit();

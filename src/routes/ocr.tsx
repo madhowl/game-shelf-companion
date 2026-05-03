@@ -1,10 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useLiveQuery } from "dexie-react-hooks";
 import { useState } from "react";
-import { ScanLine, Loader2, Upload, Settings, CheckCircle2 } from "lucide-react";
+import { ScanLine, Loader2, Upload, Settings, CheckCircle2, FolderOpen } from "lucide-react";
 import { db, uid, now, type ComponentTemplate } from "@/lib/db";
 import { Field, inputCls } from "./index";
 import { fileToDataUrl } from "@/lib/utils-format";
+import { isElectron, pickImageNative } from "@/lib/electron";
 
 export const Route = createFileRoute("/ocr")({
   component: OcrPage,
@@ -40,6 +41,7 @@ function OcrPage() {
   const [name, setName] = useState("");
   const [error, setError] = useState("");
   const [savedId, setSavedId] = useState<string | null>(null);
+  const electron = isElectron();
 
   const tpl = cardTemplates.find((t) => t.id === templateId);
 
@@ -48,6 +50,22 @@ function OcrPage() {
     setImage(await fileToDataUrl(f));
     setParsed(null);
     setSavedId(null);
+  };
+
+  const onPickNative = async () => {
+    setError("");
+    try {
+      const picked = await pickImageNative({
+        title: "Select card image for OCR",
+        buttonLabel: "Use for OCR",
+      });
+      if (!picked) return;
+      setImage(picked.dataUrl);
+      setParsed(null);
+      setSavedId(null);
+    } catch (e: any) {
+      setError(e.message ?? String(e));
+    }
   };
 
   const recognize = async () => {
@@ -150,11 +168,28 @@ function OcrPage() {
           </div>
           <div className="mt-3">
             <Field label="Card image">
-              <label className="flex items-center gap-2 cursor-pointer rounded-md border border-input px-3 py-2 text-sm hover:bg-muted w-fit">
-                <Upload className="h-4 w-4" />
-                Upload image
-                <input type="file" accept="image/*" className="hidden" onChange={(e) => onImage(e.target.files?.[0] ?? null)} />
-              </label>
+              <div className="flex flex-wrap items-center gap-2">
+                {electron && (
+                  <button
+                    type="button"
+                    onClick={onPickNative}
+                    className="inline-flex items-center gap-2 rounded-md bg-primary text-primary-foreground px-3 py-2 text-sm hover:bg-primary/90"
+                  >
+                    <FolderOpen className="h-4 w-4" />
+                    Open file…
+                  </button>
+                )}
+                <label className="inline-flex items-center gap-2 cursor-pointer rounded-md border border-input px-3 py-2 text-sm hover:bg-muted w-fit">
+                  <Upload className="h-4 w-4" />
+                  {electron ? "Browser upload" : "Upload image"}
+                  <input type="file" accept="image/*" className="hidden" onChange={(e) => onImage(e.target.files?.[0] ?? null)} />
+                </label>
+              </div>
+              {electron && (
+                <p className="text-[11px] text-muted-foreground mt-1">
+                  Desktop app detected — use the native picker for full filesystem access.
+                </p>
+              )}
             </Field>
             {image && <img src={image} alt="card" className="mt-3 max-h-72 rounded-md border border-border" />}
           </div>
