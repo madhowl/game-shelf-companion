@@ -1,5 +1,6 @@
 import { Outlet, Link, createRootRoute, HeadContent, Scripts } from "@tanstack/react-router";
 import { AppLayout } from "@/components/app/Layout";
+import { ThemeProvider } from "@/components/app/ThemeProvider";
 
 import appCss from "../styles.css?url";
 
@@ -62,6 +63,11 @@ function RootShell({ children }: { children: React.ReactNode }) {
     <html lang="en">
       <head>
         <HeadContent />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var t=localStorage.getItem('meeple-vault-theme');if(!t){t=window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';}if(t==='dark'){document.documentElement.classList.add('dark');}document.documentElement.style.colorScheme=t;}catch(e){}})();`,
+          }}
+        />
       </head>
       <body>
         {children}
@@ -73,8 +79,10 @@ function RootShell({ children }: { children: React.ReactNode }) {
 
 function RootComponent() {
   return (
-    <AppLayout>
-      <Outlet />
-    </AppLayout>
+    <ThemeProvider>
+      <AppLayout>
+        <Outlet />
+      </AppLayout>
+    </ThemeProvider>
   );
 }
