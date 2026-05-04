@@ -229,3 +229,120 @@
   background-clip: text;
   color: transparent;
 }
+
+/* ===========================
+   Skin-specific layout styling
+   Applied via .skin-<name> on <html>. Each skin reshapes density,
+   typography, surfaces, and chrome to feel like a different app.
+   =========================== */
+
+/* --- Cabinet: classic warm cabinet, generous spacing --- */
+.skin-cabinet {
+  --skin-radius-scale: 1;
+  --skin-density: 1;
+  --skin-nav-bg: color-mix(in oklab, var(--card) 80%, transparent);
+  --skin-nav-border: var(--border);
+}
+.skin-cabinet body {
+  background-image:
+    radial-gradient(oklch(0.4 0.05 45 / 0.05) 1px, transparent 1px),
+    radial-gradient(oklch(0.4 0.05 45 / 0.04) 1px, transparent 1px);
+  background-size: 22px 22px, 22px 22px;
+  background-position: 0 0, 11px 11px;
+}
+.skin-cabinet h1,
+.skin-cabinet h2,
+.skin-cabinet h3 { font-family: var(--font-display); letter-spacing: -0.01em; }
+.skin-cabinet .card,
+.skin-cabinet [data-slot="card"] {
+  border-radius: calc(var(--radius) + 2px);
+  box-shadow: var(--shadow-card);
+}
+.skin-cabinet button,
+.skin-cabinet [data-slot="button"] { border-radius: var(--radius); }
+
+/* --- Workbench: industrial top toolbar, tighter, sans display headings --- */
+.skin-workbench {
+  --radius: 0.25rem;
+  font-feature-settings: "ss01", "cv11";
+}
+.skin-workbench body {
+  background-image:
+    linear-gradient(to bottom,
+      color-mix(in oklab, var(--background) 100%, transparent),
+      color-mix(in oklab, var(--muted) 60%, var(--background)));
+  background-size: auto;
+  background-position: 0 0;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+}
+.skin-workbench h1,
+.skin-workbench h2,
+.skin-workbench h3 {
+  font-family: var(--font-sans);
+  letter-spacing: -0.02em;
+  font-weight: 700;
+  text-transform: none;
+}
+.skin-workbench .card,
+.skin-workbench [data-slot="card"] {
+  border-radius: 0.25rem;
+  border: 1px solid var(--border);
+  box-shadow: 0 1px 0 oklch(0 0 0 / 0.04);
+}
+.skin-workbench button,
+.skin-workbench [data-slot="button"] {
+  border-radius: 0.25rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+.skin-workbench input,
+.skin-workbench textarea,
+.skin-workbench select { border-radius: 0.25rem; }
+
+/* --- Command: dense, minimal, monospace accents, flat surfaces --- */
+.skin-command {
+  --radius: 0.125rem;
+}
+.skin-command body {
+  background-image: none;
+  font-size: 0.94rem;
+}
+.skin-command h1,
+.skin-command h2,
+.skin-command h3 {
+  font-family: var(--font-sans);
+  font-weight: 600;
+  letter-spacing: -0.015em;
+}
+.skin-command h1::before,
+.skin-command h2::before {
+  content: "› ";
+  color: var(--accent);
+  font-family: var(--font-mono);
+  opacity: 0.7;
+}
+.skin-command .card,
+.skin-command [data-slot="card"] {
+  border-radius: 0.125rem;
+  box-shadow: none;
+  border: 1px solid var(--border);
+  background: color-mix(in oklab, var(--card) 92%, transparent);
+}
+.skin-command button,
+.skin-command [data-slot="button"] {
+  border-radius: 0.125rem;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  letter-spacing: 0.01em;
+}
+.skin-command input,
+.skin-command textarea,
+.skin-command select {
+  border-radius: 0.125rem;
+  font-family: var(--font-mono);
+}
+.skin-command code,
+.skin-command kbd { font-family: var(--font-mono); }
