@@ -65,7 +65,7 @@ function RootShell({ children }: { children: React.ReactNode }) {
         <HeadContent />
         <script
           dangerouslySetInnerHTML={{
-            __html: `(function(){try{var t=localStorage.getItem('meeple-vault-theme');if(!t){t=window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';}if(t==='dark'){document.documentElement.classList.add('dark');}document.documentElement.style.colorScheme=t;}catch(e){}})();`,
+            __html: `(function(){try{var d=document.documentElement;var m=localStorage.getItem('meeple-vault-theme')||'system';var v=localStorage.getItem('meeple-vault-variant')||'tabletop';var r=m==='system'?(window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'):m;if(r==='dark'){d.classList.add('dark');}d.style.colorScheme=r;d.classList.remove('theme-tabletop','theme-modern','theme-neon');d.classList.add('theme-'+v);}catch(e){}})();`,
           }}
         />
       </head>
