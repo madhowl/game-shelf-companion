@@ -1,6 +1,7 @@
 import { Outlet, Link, createRootRoute, HeadContent, Scripts } from "@tanstack/react-router";
 import { AppLayout } from "@/components/app/Layout";
 import { ThemeProvider } from "@/components/app/ThemeProvider";
+import { SkinProvider } from "@/components/app/SkinProvider";
 
 import appCss from "../styles.css?url";
 
@@ -65,7 +66,7 @@ function RootShell({ children }: { children: React.ReactNode }) {
         <HeadContent />
         <script
           dangerouslySetInnerHTML={{
-            __html: `(function(){try{var d=document.documentElement;var m=localStorage.getItem('meeple-vault-theme')||'system';var v=localStorage.getItem('meeple-vault-variant')||'tabletop';var r=m==='system'?(window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'):m;if(r==='dark'){d.classList.add('dark');}d.style.colorScheme=r;d.classList.remove('theme-tabletop','theme-modern','theme-neon');d.classList.add('theme-'+v);}catch(e){}})();`,
+            __html: `(function(){try{var d=document.documentElement;var m=localStorage.getItem('meeple-vault-theme')||'system';var v=localStorage.getItem('meeple-vault-variant')||'tabletop';var s=localStorage.getItem('meeple-vault-skin')||'cabinet';var r=m==='system'?(window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'):m;if(r==='dark'){d.classList.add('dark');}d.style.colorScheme=r;d.classList.remove('theme-tabletop','theme-modern','theme-neon');d.classList.add('theme-'+v);d.classList.remove('skin-cabinet','skin-workbench','skin-command');d.classList.add('skin-'+s);}catch(e){}})();`,
           }}
         />
       </head>
@@ -80,9 +81,11 @@ function RootShell({ children }: { children: React.ReactNode }) {
 function RootComponent() {
   return (
     <ThemeProvider>
-      <AppLayout>
-        <Outlet />
-      </AppLayout>
+      <SkinProvider>
+        <AppLayout>
+          <Outlet />
+        </AppLayout>
+      </SkinProvider>
     </ThemeProvider>
   );
 }
