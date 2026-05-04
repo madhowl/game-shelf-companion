@@ -6,10 +6,10 @@ import { useSkin } from "@/components/app/SkinProvider";
 
 const nav = [
   { to: "/", label: "Library", icon: Library, exact: true },
-  { to: "/templates", label: "Components", icon: Layers },
-  { to: "/print", label: "Print Sheets", icon: Printer },
-  { to: "/ocr", label: "Card OCR", icon: ScanLine },
-  { to: "/data", label: "Import / Export", icon: FileJson },
+  { to: "/templates", label: "Components", icon: Layers, exact: false },
+  { to: "/print", label: "Print Sheets", icon: Printer, exact: false },
+  { to: "/ocr", label: "Card OCR", icon: ScanLine, exact: false },
+  { to: "/data", label: "Import / Export", icon: FileJson, exact: false },
 ] as const;
 
 function NavItem({ to, label, icon: Icon, exact }: { to: string; label: string; icon: any; exact?: boolean }) {
