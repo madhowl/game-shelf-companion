@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState } from "react";
-import { Check, Monitor, Moon, Palette, Sun } from "lucide-react";
+import { Check, Monitor, Moon, Palette, Sun, Layout as LayoutIcon } from "lucide-react";
+import { useSkin, SKINS } from "@/components/app/SkinProvider";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -108,6 +109,7 @@ export function useTheme() {
 
 export function ThemeToggle({ className }: { className?: string }) {
   const { mode, variant, resolvedMode, setMode, setVariant } = useTheme();
+  const { skin, setSkin } = useSkin();
   const Icon = resolvedMode === "dark" ? Moon : Sun;
 
   return (
@@ -152,6 +154,26 @@ export function ThemeToggle({ className }: { className?: string }) {
                 {active && <Check className="h-3.5 w-3.5 opacity-70" />}
               </div>
               <span className="text-[11px] text-muted-foreground">{v.description}</span>
+            </DropdownMenuItem>
+          );
+        })}
+        <DropdownMenuSeparator />
+        <DropdownMenuLabel className="flex items-center gap-2">
+          <LayoutIcon className="h-3.5 w-3.5" /> Layout
+        </DropdownMenuLabel>
+        {SKINS.map((s) => {
+          const active = skin === s.id;
+          return (
+            <DropdownMenuItem
+              key={s.id}
+              onClick={() => setSkin(s.id)}
+              className="flex-col items-start gap-0.5"
+            >
+              <div className="flex w-full items-center">
+                <span className="flex-1 font-medium">{s.label}</span>
+                {active && <Check className="h-3.5 w-3.5 opacity-70" />}
+              </div>
+              <span className="text-[11px] text-muted-foreground">{s.description}</span>
             </DropdownMenuItem>
           );
         })}
