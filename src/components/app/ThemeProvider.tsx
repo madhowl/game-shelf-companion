@@ -1,36 +1,101 @@
 import { createContext, useContext, useEffect, useState } from "react";
+import { Check, Monitor, Moon, Palette, Sun } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
-type Theme = "light" | "dark";
-type Ctx = { theme: Theme; setTheme: (t: Theme) => void; toggle: () => void };
+export type ThemeMode = "light" | "dark" | "system";
+export type ThemeVariant = "tabletop" | "modern" | "neon";
+
+type Ctx = {
+  mode: ThemeMode;
+  variant: ThemeVariant;
+  resolvedMode: "light" | "dark";
+  setMode: (m: ThemeMode) => void;
+  setVariant: (v: ThemeVariant) => void;
+};
 
 const ThemeContext = createContext<Ctx | null>(null);
-const STORAGE_KEY = "meeple-vault-theme";
+const MODE_KEY = "meeple-vault-theme";        // kept for backwards-compat
+const VARIANT_KEY = "meeple-vault-variant";
 
-function getInitial(): Theme {
-  if (typeof window === "undefined") return "light";
-  const stored = localStorage.getItem(STORAGE_KEY) as Theme | null;
-  if (stored === "light" || stored === "dark") return stored;
-  return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+const VARIANTS: { id: ThemeVariant; label: string; description: string }[] = [
+  { id: "tabletop", label: "Tabletop", description: "Warm wood & felt (default)" },
+  { id: "modern", label: "Modern", description: "Clean & minimal indigo" },
+  { id: "neon", label: "Neon", description: "Cyberpunk magenta & cyan" },
+];
+
+const MODES: { id: ThemeMode; label: string; icon: typeof Sun }[] = [
+  { id: "light", label: "Light", icon: Sun },
+  { id: "dark", label: "Dark", icon: Moon },
+  { id: "system", label: "System", icon: Monitor },
+];
+
+function readMode(): ThemeMode {
+  if (typeof window === "undefined") return "system";
+  const v = localStorage.getItem(MODE_KEY);
+  if (v === "light" || v === "dark" || v === "system") return v;
+  return "system";
+}
+function readVariant(): ThemeVariant {
+  if (typeof window === "undefined") return "tabletop";
+  const v = localStorage.getItem(VARIANT_KEY);
+  if (v === "tabletop" || v === "modern" || v === "neon") return v;
+  return "tabletop";
+}
+function systemPrefersDark(): boolean {
+  return typeof window !== "undefined" &&
+    window.matchMedia("(prefers-color-scheme: dark)").matches;
 }
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setThemeState] = useState<Theme>("light");
+  const [mode, setModeState] = useState<ThemeMode>("system");
+  const [variant, setVariantState] = useState<ThemeVariant>("tabletop");
+  const [resolvedMode, setResolved] = useState<"light" | "dark">("light");
 
+  // Hydrate from storage on mount
   useEffect(() => {
-    setThemeState(getInitial());
+    setModeState(readMode());
+    setVariantState(readVariant());
   }, []);
 
+  // Resolve mode (track system changes when mode === system)
+  useEffect(() => {
+    const apply = () => {
+      const r = mode === "system" ? (systemPrefersDark() ? "dark" : "light") : mode;
+      setResolved(r);
+    };
+    apply();
+    if (mode !== "system") return;
+    const mq = window.matchMedia("(prefers-color-scheme: dark)");
+    mq.addEventListener("change", apply);
+    return () => mq.removeEventListener("change", apply);
+  }, [mode]);
+
+  // Apply classes & persist
   useEffect(() => {
     const root = document.documentElement;
-    root.classList.toggle("dark", theme === "dark");
-    root.style.colorScheme = theme;
-    try { localStorage.setItem(STORAGE_KEY, theme); } catch {}
-  }, [theme]);
+    root.classList.toggle("dark", resolvedMode === "dark");
+    root.style.colorScheme = resolvedMode;
+    root.classList.remove("theme-tabletop", "theme-modern", "theme-neon");
+    root.classList.add(`theme-${variant}`);
+    try {
+      localStorage.setItem(MODE_KEY, mode);
+      localStorage.setItem(VARIANT_KEY, variant);
+    } catch {}
+  }, [resolvedMode, variant, mode]);
 
   const value: Ctx = {
-    theme,
-    setTheme: setThemeState,
-    toggle: () => setThemeState((t) => (t === "dark" ? "light" : "dark")),
+    mode,
+    variant,
+    resolvedMode,
+    setMode: setModeState,
+    setVariant: setVariantState,
   };
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
 }
@@ -42,23 +107,55 @@ export function useTheme() {
 }
 
 export function ThemeToggle({ className }: { className?: string }) {
-  const { theme, toggle } = useTheme();
+  const { mode, variant, resolvedMode, setMode, setVariant } = useTheme();
+  const Icon = resolvedMode === "dark" ? Moon : Sun;
+
   return (
-    <button
-      type="button"
-      onClick={toggle}
-      aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
-      title={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
-      className={
-        "inline-flex items-center justify-center h-9 w-9 rounded-md border border-border bg-card/60 text-foreground hover:bg-muted transition-colors " +
-        (className ?? "")
-      }
-    >
-      {theme === "dark" ? (
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
-      ) : (
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
-      )}
-    </button>
+    <DropdownMenu>
+      <DropdownMenuTrigger
+        aria-label="Theme settings"
+        title="Theme settings"
+        className={
+          "inline-flex items-center justify-center h-9 w-9 rounded-md border border-border bg-card/60 text-foreground hover:bg-muted transition-colors " +
+          (className ?? "")
+        }
+      >
+        <Icon className="h-4 w-4" />
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-56">
+        <DropdownMenuLabel className="flex items-center gap-2">
+          <Palette className="h-3.5 w-3.5" /> Appearance
+        </DropdownMenuLabel>
+        {MODES.map((m) => {
+          const MIcon = m.icon;
+          const active = mode === m.id;
+          return (
+            <DropdownMenuItem key={m.id} onClick={() => setMode(m.id)}>
+              <MIcon className="h-4 w-4 mr-2" />
+              <span className="flex-1">{m.label}</span>
+              {active && <Check className="h-3.5 w-3.5 opacity-70" />}
+            </DropdownMenuItem>
+          );
+        })}
+        <DropdownMenuSeparator />
+        <DropdownMenuLabel>Style</DropdownMenuLabel>
+        {VARIANTS.map((v) => {
+          const active = variant === v.id;
+          return (
+            <DropdownMenuItem
+              key={v.id}
+              onClick={() => setVariant(v.id)}
+              className="flex-col items-start gap-0.5"
+            >
+              <div className="flex w-full items-center">
+                <span className="flex-1 font-medium">{v.label}</span>
+                {active && <Check className="h-3.5 w-3.5 opacity-70" />}
+              </div>
+              <span className="text-[11px] text-muted-foreground">{v.description}</span>
+            </DropdownMenuItem>
+          );
+        })}
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
