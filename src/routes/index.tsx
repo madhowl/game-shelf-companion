@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { Plus, Search, BookOpen, PackagePlus, Library as LibraryIcon } from "lucide-react";
 import heroTable from "@/assets/hero-table.jpg";
 import { db, uid, now, type Game, type GameKind } from "@/lib/db";
+import { useT } from "@/lib/i18n/I18nProvider";
 
 export const Route = createFileRoute("/")({
   component: LibraryPage,
@@ -14,6 +15,7 @@ function LibraryPage() {
   const [q, setQ] = useState("");
   const [openNew, setOpenNew] = useState(false);
   const navigate = useNavigate();
+  const t = useT();
 
   const tree = useMemo(() => {
     const all = games ?? [];
@@ -43,9 +45,9 @@ function LibraryPage() {
       <section className="px-6 md:px-10 py-6 md:py-8">
         <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-6">
           <div>
-            <h1 className="font-display text-3xl md:text-4xl">Your Library</h1>
+            <h1 className="font-display text-3xl md:text-4xl">{t("library.heading")}</h1>
             <p className="text-muted-foreground text-sm mt-1">
-              {games?.length ?? 0} entries · games, series and expansions
+              {t("library.subheading", { count: games?.length ?? 0 })}
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -54,7 +56,7 @@ function LibraryPage() {
               <input
                 value={q}
                 onChange={(e) => setQ(e.target.value)}
-                placeholder="Search by name, author…"
+                placeholder={t("library.searchPlaceholder")}
                 className="pl-9 pr-3 py-2 text-sm rounded-md border border-input bg-card w-72 focus:outline-none focus:ring-2 focus:ring-ring"
               />
             </div>
@@ -62,7 +64,7 @@ function LibraryPage() {
               onClick={() => setOpenNew(true)}
               className="inline-flex items-center gap-2 rounded-md bg-primary text-primary-foreground px-4 py-2 text-sm font-medium hover:bg-primary/90 shadow-[var(--shadow-card)]"
             >
-              <Plus className="h-4 w-4" /> New entry
+              <Plus className="h-4 w-4" /> {t("library.newEntry")}
             </button>
           </div>
         </div>
@@ -89,6 +91,7 @@ function LibraryPage() {
 }
 
 function Hero({ onAdd }: { onAdd: () => void }) {
+  const t = useT();
   return (
     <section className="relative overflow-hidden border-b border-border">
       <img
@@ -101,21 +104,18 @@ function Hero({ onAdd }: { onAdd: () => void }) {
       <div className="absolute inset-0 bg-gradient-to-r from-background via-background/80 to-background/20" />
       <div className="relative px-6 md:px-12 py-16 md:py-24 max-w-3xl">
         <div className="inline-flex items-center gap-2 rounded-full border border-accent/40 bg-card/70 backdrop-blur px-3 py-1 text-xs uppercase tracking-widest text-accent-foreground">
-          <span className="h-1.5 w-1.5 rounded-full bg-accent" /> Tabletop archive
+          <span className="h-1.5 w-1.5 rounded-full bg-accent" /> {t("hero.badge")}
         </div>
         <h1 className="font-display text-5xl md:text-7xl mt-5 leading-[1.05]">
-          A library worthy of <span className="brass-text">your collection.</span>
+          {t("hero.title1")} <span className="brass-text">{t("hero.title2")}</span>
         </h1>
-        <p className="text-base md:text-lg text-muted-foreground mt-5 max-w-xl">
-          Catalog every box, every expansion, every card. Design components, print
-          ready-to-cut sheets, and recognize cards with local AI.
-        </p>
+        <p className="text-base md:text-lg text-muted-foreground mt-5 max-w-xl">{t("hero.body")}</p>
         <div className="mt-8 flex flex-wrap gap-3">
           <button
             onClick={onAdd}
             className="inline-flex items-center gap-2 rounded-md bg-primary text-primary-foreground px-5 py-3 text-sm font-medium hover:bg-primary/90 shadow-[var(--shadow-deep)]"
           >
-            <Plus className="h-4 w-4" /> Add your first game
+            <Plus className="h-4 w-4" /> {t("hero.cta")}
           </button>
         </div>
       </div>
@@ -124,18 +124,17 @@ function Hero({ onAdd }: { onAdd: () => void }) {
 }
 
 function EmptyState({ onAdd }: { onAdd: () => void }) {
+  const t = useT();
   return (
     <div className="border border-dashed border-border rounded-xl p-12 text-center bg-card/40">
       <LibraryIcon className="h-10 w-10 mx-auto text-muted-foreground" />
-      <h3 className="font-display text-2xl mt-4">No matching games</h3>
-      <p className="text-sm text-muted-foreground mt-1">
-        Try clearing the search or add a new entry.
-      </p>
+      <h3 className="font-display text-2xl mt-4">{t("library.empty.title")}</h3>
+      <p className="text-sm text-muted-foreground mt-1">{t("library.empty.body")}</p>
       <button
         onClick={onAdd}
         className="mt-5 inline-flex items-center gap-2 rounded-md bg-primary text-primary-foreground px-4 py-2 text-sm font-medium hover:bg-primary/90"
       >
-        <Plus className="h-4 w-4" /> New entry
+        <Plus className="h-4 w-4" /> {t("library.newEntry")}
       </button>
     </div>
   );
@@ -150,6 +149,7 @@ function GameCard({
   children: Game[];
   onOpen: () => void;
 }) {
+  const t = useT();
   return (
     <button
       onClick={onOpen}
@@ -175,7 +175,9 @@ function GameCard({
         {children.length > 0 && (
           <div className="mt-3 pt-3 border-t border-border flex items-center gap-2 text-xs text-muted-foreground">
             <PackagePlus className="h-3.5 w-3.5" />
-            {children.length} {children.length === 1 ? "addition" : "additions"}
+            {children.length === 1
+              ? t("card.additionsOne", { n: children.length })
+              : t("card.additionsMany", { n: children.length })}
           </div>
         )}
       </div>
@@ -184,24 +186,21 @@ function GameCard({
 }
 
 export function KindBadge({ kind }: { kind: GameKind }) {
+  const t = useT();
   const styles: Record<GameKind, string> = {
     game: "bg-card/90 text-foreground border-border",
     series: "bg-accent/90 text-accent-foreground border-accent",
     expansion: "bg-primary/90 text-primary-foreground border-primary",
   };
-  const labels: Record<GameKind, string> = {
-    game: "Game",
-    series: "Series",
-    expansion: "Expansion",
-  };
   return (
     <span className={`inline-flex items-center text-[10px] uppercase tracking-widest px-2 py-1 rounded border ${styles[kind]}`}>
-      {labels[kind]}
+      {t(`kind.${kind}`)}
     </span>
   );
 }
 
 function NewGameDialog({ onClose, parentId }: { onClose: () => void; parentId?: string }) {
+  const t = useT();
   const [form, setForm] = useState({
     name: "",
     kind: (parentId ? "expansion" : "game") as GameKind,
@@ -246,50 +245,50 @@ function NewGameDialog({ onClose, parentId }: { onClose: () => void; parentId?: 
       >
         <div className="flex items-center gap-2 mb-4">
           <BookOpen className="h-5 w-5 text-accent" />
-          <h2 className="font-display text-2xl">New entry</h2>
+          <h2 className="font-display text-2xl">{t("game.new")}</h2>
         </div>
         <div className="grid grid-cols-2 gap-3">
-          <Field label="Name" className="col-span-2">
+          <Field label={t("game.field.name")} className="col-span-2">
             <input autoFocus required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className={inputCls} />
           </Field>
-          <Field label="Type">
+          <Field label={t("game.field.type")}>
             <select value={form.kind} onChange={(e) => setForm({ ...form, kind: e.target.value as GameKind })} className={inputCls}>
-              <option value="game">Game</option>
-              <option value="series">Series</option>
-              <option value="expansion">Expansion</option>
+              <option value="game">{t("kind.game")}</option>
+              <option value="series">{t("kind.series")}</option>
+              <option value="expansion">{t("kind.expansion")}</option>
             </select>
           </Field>
-          <Field label="Parent (series / base game)">
+          <Field label={t("game.field.parent")}>
             <select value={form.parentId} onChange={(e) => setForm({ ...form, parentId: e.target.value })} className={inputCls}>
-              <option value="">— None —</option>
+              <option value="">{t("common.none")}</option>
               {(games ?? [])
                 .filter((g) => g.kind !== "expansion")
                 .map((g) => (
                   <option key={g.id} value={g.id}>
-                    {g.name} ({g.kind})
+                    {g.name} ({t(`kind.${g.kind}`)})
                   </option>
                 ))}
             </select>
           </Field>
-          <Field label="Year">
+          <Field label={t("game.field.year")}>
             <input value={form.year} onChange={(e) => setForm({ ...form, year: e.target.value })} className={inputCls} inputMode="numeric" />
           </Field>
-          <Field label="Author / Designer">
+          <Field label={t("game.field.author")}>
             <input value={form.author} onChange={(e) => setForm({ ...form, author: e.target.value })} className={inputCls} />
           </Field>
-          <Field label="Publisher" className="col-span-2">
+          <Field label={t("game.field.publisher")} className="col-span-2">
             <input value={form.publisher} onChange={(e) => setForm({ ...form, publisher: e.target.value })} className={inputCls} />
           </Field>
-          <Field label="Genres (comma separated)" className="col-span-2">
+          <Field label={t("game.field.genres")} className="col-span-2">
             <input value={form.genres} onChange={(e) => setForm({ ...form, genres: e.target.value })} className={inputCls} />
           </Field>
-          <Field label="Description" className="col-span-2">
+          <Field label={t("game.field.description")} className="col-span-2">
             <textarea rows={3} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} className={inputCls} />
           </Field>
         </div>
         <div className="mt-5 flex justify-end gap-2">
-          <button type="button" onClick={onClose} className="px-4 py-2 text-sm rounded-md border border-input hover:bg-muted">Cancel</button>
-          <button type="submit" className="px-4 py-2 text-sm rounded-md bg-primary text-primary-foreground hover:bg-primary/90">Save</button>
+          <button type="button" onClick={onClose} className="px-4 py-2 text-sm rounded-md border border-input hover:bg-muted">{t("common.cancel")}</button>
+          <button type="submit" className="px-4 py-2 text-sm rounded-md bg-primary text-primary-foreground hover:bg-primary/90">{t("common.save")}</button>
         </div>
       </form>
     </div>
