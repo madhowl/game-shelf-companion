@@ -1,6 +1,7 @@
-import { createContext, useContext, useEffect, useState } from "react";
-import { Check, Monitor, Moon, Palette, Sun, Layout as LayoutIcon } from "lucide-react";
+import { createContext, useContext, useEffect, useRef, useState } from "react";
+import { Check, Monitor, Moon, Palette, Sun, Layout as LayoutIcon, Languages, Download, Upload, Trash2 } from "lucide-react";
 import { useSkin, SKINS } from "@/components/app/SkinProvider";
+import { useI18n } from "@/lib/i18n/I18nProvider";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -25,16 +26,11 @@ const ThemeContext = createContext<Ctx | null>(null);
 const MODE_KEY = "meeple-vault-theme";        // kept for backwards-compat
 const VARIANT_KEY = "meeple-vault-variant";
 
-const VARIANTS: { id: ThemeVariant; label: string; description: string }[] = [
-  { id: "tabletop", label: "Tabletop", description: "Warm wood & felt (default)" },
-  { id: "modern", label: "Modern", description: "Clean & minimal indigo" },
-  { id: "neon", label: "Neon", description: "Cyberpunk magenta & cyan" },
-];
-
-const MODES: { id: ThemeMode; label: string; icon: typeof Sun }[] = [
-  { id: "light", label: "Light", icon: Sun },
-  { id: "dark", label: "Dark", icon: Moon },
-  { id: "system", label: "System", icon: Monitor },
+const VARIANT_IDS: ThemeVariant[] = ["tabletop", "modern", "neon"];
+const MODE_LIST: { id: ThemeMode; icon: typeof Sun }[] = [
+  { id: "light", icon: Sun },
+  { id: "dark", icon: Moon },
+  { id: "system", icon: Monitor },
 ];
 
 function readMode(): ThemeMode {
@@ -110,13 +106,27 @@ export function useTheme() {
 export function ThemeToggle({ className }: { className?: string }) {
   const { mode, variant, resolvedMode, setMode, setVariant } = useTheme();
   const { skin, setSkin } = useSkin();
+  const { t, lang, setLang, languages, importLanguage, exportLanguage, deleteCustomLanguage } = useI18n();
+  const fileRef = useRef<HTMLInputElement | null>(null);
+  const [importMsg, setImportMsg] = useState<string>("");
   const Icon = resolvedMode === "dark" ? Moon : Sun;
+
+  const onImportFile = async (file: File | null) => {
+    if (!file) return;
+    setImportMsg("");
+    try {
+      const r = await importLanguage(file);
+      setImportMsg(t("language.imported", { name: r.name }));
+    } catch {
+      setImportMsg(t("language.importError"));
+    }
+  };
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
-        aria-label="Theme settings"
-        title="Theme settings"
+        aria-label={t("theme.settings")}
+        title={t("theme.settings")}
         className={
           "inline-flex items-center justify-center h-9 w-9 rounded-md border border-border bg-card/60 text-foreground hover:bg-muted transition-colors " +
           (className ?? "")
@@ -126,40 +136,40 @@ export function ThemeToggle({ className }: { className?: string }) {
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-72">
         <DropdownMenuLabel className="flex items-center gap-2">
-          <Palette className="h-3.5 w-3.5" /> Appearance
+          <Palette className="h-3.5 w-3.5" /> {t("theme.appearance")}
         </DropdownMenuLabel>
-        {MODES.map((m) => {
+        {MODE_LIST.map((m) => {
           const MIcon = m.icon;
           const active = mode === m.id;
           return (
             <DropdownMenuItem key={m.id} onClick={() => setMode(m.id)}>
               <MIcon className="h-4 w-4 mr-2" />
-              <span className="flex-1">{m.label}</span>
+              <span className="flex-1">{t(`mode.${m.id}`)}</span>
               {active && <Check className="h-3.5 w-3.5 opacity-70" />}
             </DropdownMenuItem>
           );
         })}
         <DropdownMenuSeparator />
-        <DropdownMenuLabel>Style</DropdownMenuLabel>
-        {VARIANTS.map((v) => {
-          const active = variant === v.id;
+        <DropdownMenuLabel>{t("theme.style")}</DropdownMenuLabel>
+        {VARIANT_IDS.map((v) => {
+          const active = variant === v;
           return (
             <DropdownMenuItem
-              key={v.id}
-              onClick={() => setVariant(v.id)}
+              key={v}
+              onClick={() => setVariant(v)}
               className="flex-col items-start gap-0.5"
             >
               <div className="flex w-full items-center">
-                <span className="flex-1 font-medium">{v.label}</span>
+                <span className="flex-1 font-medium">{t(`variant.${v}`)}</span>
                 {active && <Check className="h-3.5 w-3.5 opacity-70" />}
               </div>
-              <span className="text-[11px] text-muted-foreground">{v.description}</span>
+              <span className="text-[11px] text-muted-foreground">{t(`variant.${v}.desc`)}</span>
             </DropdownMenuItem>
           );
         })}
         <DropdownMenuSeparator />
         <DropdownMenuLabel className="flex items-center gap-2">
-          <LayoutIcon className="h-3.5 w-3.5" /> Layout
+          <LayoutIcon className="h-3.5 w-3.5" /> {t("theme.layout")}
         </DropdownMenuLabel>
         <div className="grid grid-cols-3 gap-2 px-2 pb-2 pt-1">
           {SKINS.map((s) => {
@@ -169,7 +179,7 @@ export function ThemeToggle({ className }: { className?: string }) {
                 key={s.id}
                 type="button"
                 onClick={() => setSkin(s.id)}
-                title={s.description}
+                title={t(`skin.${s.id}.desc`)}
                 className={[
                   "group flex flex-col items-stretch gap-1 rounded-md border p-1.5 text-left transition-colors",
                   active
@@ -179,13 +189,62 @@ export function ThemeToggle({ className }: { className?: string }) {
               >
                 <SkinThumbnail skin={s.id} />
                 <div className="flex items-center justify-between px-0.5">
-                  <span className="text-[11px] font-medium truncate">{s.label}</span>
+                  <span className="text-[11px] font-medium truncate">{t(`skin.${s.id}`)}</span>
                   {active && <Check className="h-3 w-3 text-accent" />}
                 </div>
               </button>
             );
           })}
         </div>
+        <DropdownMenuSeparator />
+        <DropdownMenuLabel className="flex items-center gap-2">
+          <Languages className="h-3.5 w-3.5" /> {t("theme.language")}
+        </DropdownMenuLabel>
+        {languages.map((l) => {
+          const active = lang === l.code;
+          return (
+            <DropdownMenuItem
+              key={l.code}
+              onSelect={(e) => { e.preventDefault(); setLang(l.code); }}
+              className="flex items-center gap-2"
+            >
+              <span className="flex-1 truncate">
+                {l.name}
+                <span className="ml-2 text-[10px] uppercase tracking-widest text-muted-foreground">
+                  {l.builtin ? t("language.builtin") : t("language.custom")}
+                </span>
+              </span>
+              {active && <Check className="h-3.5 w-3.5 opacity-70" />}
+              {!l.builtin && (
+                <button
+                  type="button"
+                  title={t("language.delete")}
+                  onClick={(e) => { e.stopPropagation(); deleteCustomLanguage(l.code); }}
+                  className="text-muted-foreground hover:text-destructive"
+                >
+                  <Trash2 className="h-3 w-3" />
+                </button>
+              )}
+            </DropdownMenuItem>
+          );
+        })}
+        <DropdownMenuSeparator />
+        <DropdownMenuItem onSelect={(e) => { e.preventDefault(); fileRef.current?.click(); }}>
+          <Upload className="h-3.5 w-3.5 mr-2" /> {t("language.import")}
+        </DropdownMenuItem>
+        <DropdownMenuItem onSelect={(e) => { e.preventDefault(); exportLanguage(lang); }}>
+          <Download className="h-3.5 w-3.5 mr-2" /> {t("language.export")}
+        </DropdownMenuItem>
+        {importMsg && (
+          <div className="px-2 pt-1 pb-2 text-[11px] text-muted-foreground">{importMsg}</div>
+        )}
+        <input
+          ref={fileRef}
+          type="file"
+          accept="application/json"
+          className="hidden"
+          onChange={(e) => { onImportFile(e.target.files?.[0] ?? null); e.target.value = ""; }}
+        />
       </DropdownMenuContent>
     </DropdownMenu>
   );
