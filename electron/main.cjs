@@ -1,25 +1,69 @@
 const { app, BrowserWindow, shell, Menu, ipcMain, dialog } = require("electron");
 const path = require("path");
 const fs = require("fs");
+const http = require("http");
 
 const isDev = !app.isPackaged && process.env.ELECTRON_DEV === "1";
-const devUrl = process.env.ELECTRON_DEV_URL || "http://localhost:3000";
+const devUrl = process.env.ELECTRON_DEV_URL || "http://localhost:8080";
 
-function resolveIndexHtml() {
-  // Look for a built static SPA. We try a few likely locations.
-  const candidates = [
-    path.join(__dirname, "..", "dist", "client", "index.html"),
-    path.join(__dirname, "..", "dist", "index.html"),
-    path.join(__dirname, "..", ".output", "public", "index.html"),
-    path.join(process.resourcesPath || "", "app", "dist", "client", "index.html"),
-  ];
-  for (const p of candidates) {
-    try {
-      if (fs.existsSync(p)) return p;
-    } catch {}
+let localServer = null;
+
+async function startLocalServer() {
+  if (isDev) {
+    console.log("[Meeple Vault] Using Vite dev server:", devUrl);
+    return devUrl;
   }
-  return null;
+
+  return new Promise((resolve) => {
+    const distPath = path.join(__dirname, "..", "dist");
+    const indexHtml = fs.readFileSync(path.join(distPath, "index.html"), "utf-8");
+
+    const server = http.createServer((req, res) => {
+      let urlPath = req.url === "/" ? "/index.html" : req.url;
+      let filePath = path.join(distPath, urlPath);
+
+      const ext = path.extname(filePath);
+      const contentTypes = {
+        ".html": "text/html",
+        ".js": "application/javascript",
+        ".css": "text/css",
+        ".json": "application/json",
+        ".png": "image/png",
+        ".jpg": "image/jpeg",
+        ".jpeg": "image/jpeg",
+        ".gif": "image/gif",
+        ".svg": "image/svg+xml",
+        ".woff": "font/woff",
+        ".woff2": "font/woff2",
+      };
+
+      const contentType = contentTypes[ext] || "application/octet-stream";
+
+      fs.readFile(filePath, (err, data) => {
+        if (err) {
+          res.writeHead(200, { "Content-Type": "text/html" });
+          res.end(indexHtml);
+        } else {
+          res.writeHead(200, { "Content-Type": contentType });
+          res.end(data);
+        }
+      });
+    });
+
+    server.listen(3847, (err) => {
+      if (err) {
+        console.error("Failed to start server:", err);
+        process.exit(1);
+      }
+      localServer = server;
+      const url = "http://localhost:3847";
+      console.log(`[Meeple Vault] Local server: ${url}`);
+      resolve(url);
+    });
+  });
 }
+
+let localServerUrl = null;
 
 function createWindow() {
   const win = new BrowserWindow({
@@ -33,12 +77,11 @@ function createWindow() {
     webPreferences: {
       contextIsolation: true,
       nodeIntegration: false,
-      sandbox: true,
+      sandbox: false,
       preload: path.join(__dirname, "preload.cjs"),
     },
   });
 
-  // Open external links in the user's default browser, not inside the app.
   win.webContents.setWindowOpenHandler(({ url }) => {
     if (/^https?:\/\//i.test(url)) {
       shell.openExternal(url);
@@ -49,26 +92,21 @@ function createWindow() {
 
   if (isDev) {
     win.loadURL(devUrl);
-    win.webContents.openDevTools({ mode: "detach" });
-  } else {
-    const indexPath = resolveIndexHtml();
-    if (indexPath) {
-      win.loadFile(indexPath);
-    } else {
-      win.loadURL(
-        "data:text/html;charset=utf-8," +
-          encodeURIComponent(
-            `<!doctype html><html><body style="font-family:system-ui;padding:2rem;background:#1a120b;color:#f3e6cf">
-              <h1>Meeple Vault</h1>
-              <p>No built UI found. Run <code>npm run electron:build:web</code> first to produce <code>dist/client/index.html</code>.</p>
-            </body></html>`
-          )
-      );
+    if (process.env.ELECTRON_DEV === "1") {
+      win.webContents.openDevTools({ mode: "detach" });
     }
+  } else if (localServerUrl) {
+    win.loadURL(localServerUrl);
+  } else {
+    win.loadURL("data:text/html;charset=utf-8," + encodeURIComponent(
+      `<!doctype html><html><body style="font-family:system-ui;padding:2rem;background:#1a120b;color:#f3e6cf">
+        <h1>Meeple Vault</h1>
+        <p>Starting local server...</p>
+      </body></html>`
+    ));
   }
 }
 
-// Minimal application menu (mostly relies on autoHideMenuBar).
 Menu.setApplicationMenu(
   Menu.buildFromTemplate([
     {
@@ -86,11 +124,12 @@ Menu.setApplicationMenu(
   ])
 );
 
-app.whenReady().then(createWindow);
+app.whenReady().then(async () => {
+  const serverUrl = await startLocalServer();
+  localServerUrl = serverUrl;
+  createWindow();
+});
 
-// ---------------------------------------------------------------------------
-// IPC: native image picker for OCR
-// ---------------------------------------------------------------------------
 const IMAGE_MIME = {
   ".png": "image/png",
   ".jpg": "image/jpeg",
@@ -133,6 +172,9 @@ ipcMain.handle("meeple:open-image", async (event, opts = {}) => {
 });
 
 app.on("window-all-closed", () => {
+  if (localServer) {
+    localServer.close();
+  }
   if (process.platform !== "darwin") app.quit();
 });
 
