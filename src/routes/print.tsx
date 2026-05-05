@@ -5,6 +5,7 @@ import jsPDF from "jspdf";
 import { Printer, Scissors } from "lucide-react";
 import { db, type ComponentInstance, type ComponentTemplate } from "@/lib/db";
 import { Field, inputCls } from "./index";
+import { useT } from "@/lib/i18n/I18nProvider";
 
 export const Route = createFileRoute("/print")({
   component: PrintPage,
@@ -16,6 +17,7 @@ const PAGES = {
 } as const;
 
 function PrintPage() {
+  const tr = useT();
   const games = useLiveQuery(() => db.games.toArray(), []);
   const templates = useLiveQuery(() => db.templates.toArray(), []);
   const components = useLiveQuery(() => db.components.toArray(), []);
@@ -44,7 +46,7 @@ function PrintPage() {
   const generate = async () => {
     if (selected.length === 0) {
       setGenerated(null);
-      alert("No card components match the filters.");
+      alert(tr("print.noCards"));
       return;
     }
     const page = PAGES[pageSize];
@@ -103,56 +105,56 @@ function PrintPage() {
 
   return (
     <div className="px-6 md:px-10 py-6 md:py-8 max-w-6xl">
-      <h1 className="font-display text-3xl md:text-4xl">Print Sheets</h1>
-      <p className="text-muted-foreground text-sm mt-1">Auto-layout cards on printable sheets with cut marks.</p>
+      <h1 className="font-display text-3xl md:text-4xl">{tr("print.heading")}</h1>
+      <p className="text-muted-foreground text-sm mt-1">{tr("print.sub")}</p>
 
       <div className="mt-6 grid md:grid-cols-[360px_1fr] gap-6">
         <div className="bg-card border border-border rounded-xl p-5 shadow-[var(--shadow-card)] h-fit">
-          <h2 className="font-display text-xl mb-3">Sheet options</h2>
+          <h2 className="font-display text-xl mb-3">{tr("print.options")}</h2>
           <div className="space-y-3">
-            <Field label="Game">
+            <Field label={tr("print.game")}>
               <select value={gameId} onChange={(e) => setGameId(e.target.value)} className={inputCls}>
-                <option value="">All games</option>
+                <option value="">{tr("print.allGames")}</option>
                 {(games ?? []).map((g) => <option key={g.id} value={g.id}>{g.name}</option>)}
               </select>
             </Field>
-            <Field label="Card template">
+            <Field label={tr("print.cardTemplate")}>
               <select value={templateId} onChange={(e) => setTemplateId(e.target.value)} className={inputCls}>
-                <option value="">All card templates</option>
+                <option value="">{tr("print.allTemplates")}</option>
                 {cardTemplates.map((t) => <option key={t.id} value={t.id}>{t.name} ({t.cardWidthMm}×{t.cardHeightMm}mm)</option>)}
               </select>
             </Field>
             <div className="grid grid-cols-2 gap-3">
-              <Field label="Page">
+              <Field label={tr("print.page")}>
                 <select value={pageSize} onChange={(e) => setPageSize(e.target.value as keyof typeof PAGES)} className={inputCls}>
                   <option value="A4">A4</option>
                   <option value="Letter">Letter</option>
                 </select>
               </Field>
-              <Field label="Margin (mm)">
+              <Field label={tr("print.margin")}>
                 <input type="number" value={margin} onChange={(e) => setMargin(Number(e.target.value))} className={inputCls} />
               </Field>
-              <Field label="Gap (mm)">
+              <Field label={tr("print.gap")}>
                 <input type="number" value={gap} onChange={(e) => setGap(Number(e.target.value))} className={inputCls} />
               </Field>
-              <Field label="Bleed (mm)">
+              <Field label={tr("print.bleed")}>
                 <input type="number" value={bleed} onChange={(e) => setBleed(Number(e.target.value))} className={inputCls} />
               </Field>
             </div>
             <label className="inline-flex items-center gap-2 text-sm">
               <input type="checkbox" checked={includeBacks} onChange={(e) => setIncludeBacks(e.target.checked)} />
-              Include card backs (duplex mirrored)
+              {tr("print.includeBacks")}
             </label>
             <div className="text-xs text-muted-foreground">
-              Matching cards: <span className="font-medium text-foreground">{totalCards}</span>
+              {tr("print.matching")} <span className="font-medium text-foreground">{totalCards}</span>
             </div>
             <button onClick={generate} className="w-full inline-flex items-center justify-center gap-2 rounded-md bg-primary text-primary-foreground px-4 py-2.5 text-sm font-medium hover:bg-primary/90">
-              <Printer className="h-4 w-4" /> Generate PDF
+              <Printer className="h-4 w-4" /> {tr("print.generate")}
             </button>
           </div>
           <div className="mt-4 flex items-start gap-2 text-xs text-muted-foreground">
             <Scissors className="h-4 w-4 mt-0.5 flex-shrink-0" />
-            Cut marks are placed just outside the card boundaries.
+            {tr("print.cutHint")}
           </div>
         </div>
 
@@ -163,7 +165,7 @@ function PrintPage() {
             <div className="h-full grid place-items-center p-10 text-center text-muted-foreground">
               <div>
                 <Printer className="h-10 w-10 mx-auto" />
-                <p className="mt-3 text-sm">Configure options and click <span className="font-medium">Generate PDF</span> to preview.</p>
+                <p className="mt-3 text-sm">{tr("print.previewHint", { action: tr("print.generate") })}</p>
               </div>
             </div>
           )}

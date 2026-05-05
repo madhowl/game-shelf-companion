@@ -249,6 +249,7 @@ function EditGameDialog({ game, onClose }: { game: Game; onClose: () => void }) 
 }
 
 function AddComponentDialog({ gameId, onClose }: { gameId: string; onClose: () => void }) {
+  const tr = useT();
   const templates = useLiveQuery(() => db.templates.toArray(), []);
   const [templateId, setTemplateId] = useState("");
   const [name, setName] = useState("");
@@ -279,26 +280,28 @@ function AddComponentDialog({ gameId, onClose }: { gameId: string; onClose: () =
   return (
     <div className="fixed inset-0 z-50 grid place-items-center bg-foreground/40 backdrop-blur-sm p-4" onClick={onClose}>
       <form onClick={(e) => e.stopPropagation()} onSubmit={submit} className="bg-card w-full max-w-lg rounded-xl border border-border shadow-[var(--shadow-deep)] p-6 max-h-[90vh] overflow-auto">
-        <h2 className="font-display text-2xl mb-4">Add component</h2>
+        <h2 className="font-display text-2xl mb-4">{tr("comp.add")}</h2>
         {(templates?.length ?? 0) === 0 ? (
           <p className="text-sm text-muted-foreground">
-            You don't have any component templates yet. Create one in the <Link onClick={onClose} to="/templates" className="underline">Components</Link> section.
+            {tr("comp.noTemplates", { link: "" }).split("{link}")[0]}
+            <Link onClick={onClose} to="/templates" className="underline">{tr("nav.templates")}</Link>
+            {tr("comp.noTemplates", { link: "" }).split("{link}")[1] ?? ""}
           </p>
         ) : (
           <div className="space-y-3">
-            <Field label="Template">
+            <Field label={tr("comp.template")}>
               <select value={templateId} onChange={(e) => { setTemplateId(e.target.value); setValues({}); }} className={inputCls}>
-                <option value="">— Select —</option>
+                <option value="">{tr("common.none")}</option>
                 {templates!.map((t) => (
-                  <option key={t.id} value={t.id}>{t.name} ({t.kind})</option>
+                  <option key={t.id} value={t.id}>{t.name}</option>
                 ))}
               </select>
             </Field>
             <div className="grid grid-cols-2 gap-3">
-              <Field label="Name">
+              <Field label={tr("game.field.name")}>
                 <input value={name} onChange={(e) => setName(e.target.value)} required className={inputCls} />
               </Field>
-              <Field label="Quantity">
+              <Field label={tr("comp.quantity")}>
                 <input type="number" min={1} value={quantity} onChange={(e) => setQuantity(Number(e.target.value))} className={inputCls} />
               </Field>
             </div>
@@ -321,7 +324,7 @@ function AddComponentDialog({ gameId, onClose }: { gameId: string; onClose: () =
               </Field>
             ))}
             <div className="grid grid-cols-2 gap-3">
-              <Field label="Front image">
+              <Field label={tr("comp.frontImage")}>
                 <input type="file" accept="image/*" className="text-sm" onChange={async (e) => {
                   const f = e.target.files?.[0];
                   if (f) setFrontImage(await fileToDataUrl(f));
@@ -329,7 +332,7 @@ function AddComponentDialog({ gameId, onClose }: { gameId: string; onClose: () =
                 {frontImage && <img src={frontImage} alt="" className="mt-2 h-20 rounded border border-border object-cover" />}
               </Field>
               {tpl?.twoSided && (
-                <Field label="Back image">
+                <Field label={tr("comp.backImage")}>
                   <input type="file" accept="image/*" className="text-sm" onChange={async (e) => {
                     const f = e.target.files?.[0];
                     if (f) setBackImage(await fileToDataUrl(f));
@@ -341,8 +344,8 @@ function AddComponentDialog({ gameId, onClose }: { gameId: string; onClose: () =
           </div>
         )}
         <div className="mt-5 flex justify-end gap-2">
-          <button type="button" onClick={onClose} className="px-4 py-2 text-sm rounded-md border border-input hover:bg-muted">Cancel</button>
-          <button type="submit" disabled={(templates?.length ?? 0) === 0} className="px-4 py-2 text-sm rounded-md bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-40">Save</button>
+          <button type="button" onClick={onClose} className="px-4 py-2 text-sm rounded-md border border-input hover:bg-muted">{tr("common.cancel")}</button>
+          <button type="submit" disabled={(templates?.length ?? 0) === 0} className="px-4 py-2 text-sm rounded-md bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-40">{tr("common.save")}</button>
         </div>
       </form>
     </div>
