@@ -15,6 +15,9 @@ $ErrorActionPreference = "Stop"
 Write-Host "==> Building web bundle (vite build)" -ForegroundColor Cyan
 npx vite build
 
+Write-Host "==> Generating static HTML for Electron" -ForegroundColor Cyan
+node scripts/build-electron-html.mjs
+
 if (-not (Test-Path "dist/index.html") -and -not (Test-Path "dist/client/index.html")) {
   Write-Warning "No dist/index.html produced. See ELECTRON.md."
 }

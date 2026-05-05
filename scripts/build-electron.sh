@@ -12,6 +12,9 @@ TARGET="${1:-current}"
 echo "==> Building web bundle (vite build)"
 npx vite build
 
+echo "==> Generating static HTML for Electron"
+node scripts/build-electron-html.mjs
+
 # Sanity check: electron-builder needs a dist/ index file.
 if [ ! -f "dist/index.html" ] && [ ! -f "dist/client/index.html" ]; then
   echo "!! No dist/index.html or dist/client/index.html produced."

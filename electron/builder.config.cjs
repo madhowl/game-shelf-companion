@@ -30,6 +30,7 @@ module.exports = {
     main: "electron/main.cjs",
   },
   asar: true,
+  icon: "electron/build/icon",
   win: {
     target: [{ target: "nsis", arch: ["x64"] }],
     artifactName: "MeepleVault-Setup-${version}-${arch}.${ext}",
@@ -50,6 +51,7 @@ module.exports = {
     ],
     artifactName: "MeepleVault-${version}-${arch}.${ext}",
     hardenedRuntime: false,
+    icon: "electron/build/icon.icns",
   },
   dmg: {
     title: "Meeple Vault ${version}",
@@ -62,5 +64,6 @@ module.exports = {
     category: "Utility",
     artifactName: "MeepleVault-${version}-${arch}.${ext}",
     synopsis: "Board game collection manager",
+    icon: "electron/build/icon.png",
   },
 };
