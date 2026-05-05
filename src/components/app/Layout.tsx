@@ -3,14 +3,20 @@ import { Library, Layers, FileJson, Printer, ScanLine, Dices } from "lucide-reac
 import type { ReactNode } from "react";
 import { ThemeToggle } from "@/components/app/ThemeProvider";
 import { useSkin } from "@/components/app/SkinProvider";
+import { useT } from "@/lib/i18n/I18nProvider";
 
-const nav = [
-  { to: "/", label: "Library", icon: Library, exact: true },
-  { to: "/templates", label: "Components", icon: Layers, exact: false },
-  { to: "/print", label: "Print Sheets", icon: Printer, exact: false },
-  { to: "/ocr", label: "Card OCR", icon: ScanLine, exact: false },
-  { to: "/data", label: "Import / Export", icon: FileJson, exact: false },
+const NAV = [
+  { to: "/", labelKey: "nav.library", icon: Library, exact: true },
+  { to: "/templates", labelKey: "nav.templates", icon: Layers, exact: false },
+  { to: "/print", labelKey: "nav.print", icon: Printer, exact: false },
+  { to: "/ocr", labelKey: "nav.ocr", icon: ScanLine, exact: false },
+  { to: "/data", labelKey: "nav.data", icon: FileJson, exact: false },
 ] as const;
+
+function useNav() {
+  const t = useT();
+  return NAV.map((n) => ({ ...n, label: t(n.labelKey) }));
+}
 
 function NavItem({ to, label, icon: Icon, exact }: { to: string; label: string; icon: any; exact?: boolean }) {
   const { location } = useRouterState();
@@ -39,6 +45,8 @@ export function AppLayout({ children }: { children?: ReactNode }) {
 }
 
 function CabinetLayout({ children }: { children?: ReactNode }) {
+  const t = useT();
+  const nav = useNav();
   return (
     <div className="min-h-screen flex">
       <aside className="hidden md:flex w-64 flex-col border-r border-border bg-card/60 backdrop-blur">
@@ -48,9 +56,9 @@ function CabinetLayout({ children }: { children?: ReactNode }) {
               <Dices className="h-5 w-5" />
             </div>
             <div>
-              <div className="font-display text-xl leading-none">Meeple Vault</div>
+              <div className="font-display text-xl leading-none">{t("layout.title")}</div>
               <div className="text-[11px] text-muted-foreground tracking-widest uppercase mt-1">
-                Collection Manager
+                {t("layout.subtitle")}
               </div>
             </div>
           </Link>
@@ -61,9 +69,7 @@ function CabinetLayout({ children }: { children?: ReactNode }) {
           ))}
         </nav>
         <div className="p-4 border-t border-border flex items-center justify-between gap-2">
-          <div className="text-[11px] text-muted-foreground">
-            Local-first · Stored in your browser
-          </div>
+          <div className="text-[11px] text-muted-foreground">{t("layout.footer")}</div>
           <ThemeToggle />
         </div>
       </aside>
@@ -83,6 +89,8 @@ function CabinetLayout({ children }: { children?: ReactNode }) {
 }
 
 function WorkbenchLayout({ children }: { children?: ReactNode }) {
+  const t = useT();
+  const nav = useNav();
   return (
     <div className="min-h-screen flex flex-col">
       <header className="border-b border-border wood-surface shadow-[var(--shadow-card)]">
@@ -91,7 +99,7 @@ function WorkbenchLayout({ children }: { children?: ReactNode }) {
             <div className="h-9 w-9 rounded-md flex items-center justify-center bg-background/15 border border-background/20">
               <Dices className="h-5 w-5" />
             </div>
-            <div className="font-display text-xl leading-none">Meeple Vault</div>
+            <div className="font-display text-xl leading-none">{t("layout.title")}</div>
           </Link>
           <nav className="flex gap-1 overflow-x-auto flex-1">
             {nav.map((n) => {
@@ -131,13 +139,14 @@ function TabItem({ to, exact, children }: { to: string; exact?: boolean; childre
 
 function CommandLayout({ children }: { children?: ReactNode }) {
   const { location } = useRouterState();
+  const nav = useNav();
   return (
     <div className="min-h-screen flex">
       <aside className="hidden md:flex w-16 flex-col items-center border-r border-border bg-card/60 py-4 gap-2">
         <Link
           to="/"
           className="h-10 w-10 rounded-md flex items-center justify-center wood-surface mb-2"
-          title="Meeple Vault"
+          title={"Meeple Vault"}
         >
           <Dices className="h-5 w-5" />
         </Link>
