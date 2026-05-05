@@ -5,6 +5,7 @@ import { ArrowLeft, Edit3, Plus, Trash2, Image as ImageIcon } from "lucide-react
 import { db, now, uid, type Game, type ComponentInstance } from "@/lib/db";
 import { Field, KindBadge, inputCls } from "./index";
 import { fileToDataUrl } from "@/lib/utils-format";
+import { useT } from "@/lib/i18n/I18nProvider";
 
 export const Route = createFileRoute("/game/$id")({
   component: GameDetail,
