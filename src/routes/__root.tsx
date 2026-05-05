@@ -2,6 +2,7 @@ import { Outlet, Link, createRootRoute, HeadContent, Scripts } from "@tanstack/r
 import { AppLayout } from "@/components/app/Layout";
 import { ThemeProvider } from "@/components/app/ThemeProvider";
 import { SkinProvider } from "@/components/app/SkinProvider";
+import { I18nProvider } from "@/lib/i18n/I18nProvider";
 
 import appCss from "../styles.css?url";
 
@@ -82,9 +83,11 @@ function RootComponent() {
   return (
     <ThemeProvider>
       <SkinProvider>
-        <AppLayout>
-          <Outlet />
-        </AppLayout>
+        <I18nProvider>
+          <AppLayout>
+            <Outlet />
+          </AppLayout>
+        </I18nProvider>
       </SkinProvider>
     </ThemeProvider>
   );
